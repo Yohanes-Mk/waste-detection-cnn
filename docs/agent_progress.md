@@ -8,7 +8,7 @@
 | 3 — Architecture selection & baseline | **Done — Gate 3 passed** | YOLO11n selected over Faster R-CNN alternative (`docs/phase3_model_selection.md`). Smoke test + full 50-epoch E0 run completed in 1.276hr on M1 Pro/MPS. Real val metrics: mAP50=0.158, mAP50-95=0.122 (`docs/phase3_results.md`, `experiments/E0_baseline/`). |
 | 4 — Controlled augmentation experiment | Not started (stretch goal) | — |
 | 5 — Locked evaluation & new images | **Done — Gate 5 passed** | Locked test eval: mAP50=0.129, mAP50-95=0.097 (`outputs/test_metrics.json`). 5 genuinely external images (Wikimedia Commons, provenance in `data/unseen_external/README.md`) run through inference — 2 clean successes, 3 real failure modes analyzed (`docs/phase5_results.md`). |
-| 6 — Report package & student review | Not started | — |
+| 6 — Report package & student review | **Draft written, awaiting your review/rewrite** | `report/REPORT.md` — maps to all 5 professor-required sections, pulls only real/logged numbers. AI-use disclosure intentionally omitted per your instruction (you're writing a separate file for that). Not yet rewritten in your own words/voice — do that before submitting. |
 | 7 — Portfolio extension (optional) | Not started | — |
 
 Dataset downloaded and audited (Phase 1), converted and split (Phase 2), E0 baseline trained with real logged metrics (Phase 3). Everything reported above is backed by committed artifacts — nothing here is simulated or estimated.

@@ -23,6 +23,10 @@
 
 | 2026-11-16 | E0 baseline training complete: 50 epochs, 1.276hr, mAP50=0.158, mAP50-95=0.122 on val | Real, logged run (`experiments/E0_baseline/`). `Cigarette` (largest class, 667 instances) scored ~0 AP — genuinely informative given RQ1's focus on small/rare-object performance, not a bug to fix. Checkpoints (~5MB each) committed directly — small enough that `.gitignore`'s earlier blanket `*.pt` exclusion was removed. |
 
+| 2026-11-16 | Skipped Phase 4 (E1 augmentation) per student instruction; went straight to Phase 5 | E0 alone satisfies the professor's five required steps. H1 (augmentation effect) is now explicitly a disclosed limitation in `docs/phase5_results.md`, not silently dropped. |
+| 2026-11-16 | Caught and fixed a mislabeling bug before it reached the report: first extraction of per-class test metrics pulled `box.ap` (mAP50-95) into a field labeled `mAP50` | Verified against the console output table and Ultralytics' actual per-class AP50/AP arrays (`box.ap50`, `box.ap`) before saving `outputs/test_metrics.json` — caught by cross-checking printed values, not assumed correct. |
+| 2026-11-16 | 5 genuinely external (non-TACO) images from Wikimedia Commons, used qualitatively only (no ground truth) | Locked TACO test split already satisfies the professor's literal "unseen data" requirement; these add a distribution-shift check the PRD recommends but doesn't require. Raw originals gitignored (reproducible from the documented Commons URLs) — only compressed prediction outputs committed. |
+
 ## Open items needing the student's decision (not facts an agent can look up)
 - Confirm the Research Assignment's actual due date in D2L.
 - Approve, reject, or counter-propose the refined RQ1 in `docs/literature_notes.md` (Gate 0).

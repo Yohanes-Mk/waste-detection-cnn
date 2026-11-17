@@ -4,8 +4,13 @@ __pycache__/
 .DS_Store
 data/raw/
 data/processed/
-outputs/
+data/unseen_external/*.jpg
+data/unseen_external/*.JPG
+!data/unseen_external/README.md
+outputs/*
+!outputs/*.json
 .ipynb_checkpoints/
 
 # YOLO11n checkpoints are ~5MB, small enough to commit as real evidence
 # (PRD requires saved checkpoints as Gate 3 evidence) — not blanket-ignored.
+runs/

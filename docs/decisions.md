@@ -30,6 +30,9 @@
 | 2026-11-27 | Due date confirmed: 2026-11-27 (student checked D2L) | ~11 days from Phase 5 completion — not urgent, no need to cut further scope. |
 | 2026-11-16 | AI-use disclosure deferred: student will author a separate file covering it later; report draft omits any AI-disclosure section/mention for now | Explicit student instruction. Not the same as skipping it — it's planned, just not part of this draft. |
 
+| 2026-11-16 | Report delivered as `.docx` (built with docx-js, not LaTeX) rather than converted through a LaTeX pipeline | No `pandoc`/LibreOffice installed on this machine to render a LaTeX→docx pipeline cleanly; docx-js produces the .docx directly and was verified by extracting its embedded images and text, not just assumed correct. |
+| 2026-11-16 | Code-only zip contains just the 7 scripts (no `configs/dataset.yaml`, no data, no checkpoints) | Matches the literal request ("cleanup codes only"); the scripts reference relative paths that assume being run from inside the full repo, not from this zip alone — noted here so it isn't mistaken for a standalone runnable package. |
+
 ## Open items needing the student's decision (not facts an agent can look up)
 - Confirm the Research Assignment's actual due date in D2L.
 - Approve, reject, or counter-propose the refined RQ1 in `docs/literature_notes.md` (Gate 0).

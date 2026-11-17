@@ -1,0 +1,23 @@
+path: /Users/jon/Jon root folder/Education/Fall 26/waste-detection-cnn/data/processed
+train: train/images
+val: val/images
+test: test/images
+names:
+  0: Plastic bag & wrapper
+  1: Cigarette
+  2: Unlabeled litter
+  3: Bottle
+  4: Bottle cap
+  5: Can
+  6: Other plastic
+  7: Carton
+  8: Cup
+  9: Straw
+  10: Paper
+  11: Broken glass
+  12: Styrofoam piece
+  13: Pop tab
+  14: Lid
+  15: Plastic container
+  16: Aluminium foil
+  17: other_litter

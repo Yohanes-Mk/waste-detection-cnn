@@ -29,21 +29,25 @@ These match the PRD's "approximate reference scale" exactly (1,500 images / 4,78
 
 **Annotation sanity check:** 20 random images with drawn bounding-box overlays were visually inspected (`outputs/overlays/`, compressed samples committed at `report/figures/overlay_thumbnails/`) — boxes are tightly and correctly placed around litter objects in every sample reviewed.
 
-## Proposed class taxonomy (pending approval — Gate 1)
+## Class taxonomy (approved — Gate 1, implemented in Phase 2)
 
-60 raw categories is unworkable for a lightweight detector trained on 1,500 images (most classes have single-digit instance counts). Two taxonomy options, built from the *actual* measured frequencies above rather than an assumed split:
+60 raw categories is unworkable for a lightweight detector trained on 1,500 images (most classes have single-digit instance counts). Approved rule (Option B): keep every **supercategory with ≥50 instances** under its own name; fold everything rarer into a single `other_litter` catch-all.
 
-- **Option A — single `litter` class.** Collapses everything to binary foreground/background detection. Simplest, most robust given the data volume, but discards the category information the report needs to "discuss results... per category" meaningfully, and makes the small/rare-class augmentation question (refined RQ1) harder to state per-category.
-- **Option B (recommended) — use the dataset's 28 supercategories, then keep only ones with ≥50 instances** (`Cigarette`-like `Unlabeled litter`, `Plastic bag & wrapper`, `Bottle`, `Bottle cap`, `Can`, `Other plastic`, `Cup`, `Carton`, `Straw`, `Broken glass`, `Paper`, `Lid`, `Pop tab` — 13 groups covering the large majority of instances), with everything below that threshold folded into a single `other litter` class. Keeps enough category resolution for a meaningful per-class discussion and for RQ1's small-vs-common-class comparison, while not asking the model to learn categories it has fewer than ~50 examples to learn from.
+Recomputing this directly in `scripts/prepare_dataset.py` (not by hand — an earlier hand-count in this file mistakenly said 13 and omitted `Cigarette`, the single largest category; see `docs/decisions.md`) gives **17 classes ≥50 instances + `other_litter` = 18 total**:
 
-**Recommendation: Option B, 13 supercategory-derived classes + 1 `other litter` catch-all (14 classes total).** Pending your approval before any class remapping is implemented.
+`Plastic bag & wrapper (850), Cigarette (667), Unlabeled litter (517), Bottle (439), Bottle cap (289), Can (273), Other plastic (273), Carton (251), Cup (192), Straw (161), Paper (148), Broken glass (138), Styrofoam piece (112), Pop tab (99), Lid (87), Plastic container (72), Aluminium foil (62), other_litter (everything else)`
 
-## Proposed split (pending approval — Gate 1)
+Full counts in `data/splits/manifest.json`.
 
-- **70/15/15 train/val/test**, stratified by the proposed class taxonomy (not raw 60-class, which is too sparse to stratify).
-- **Leakage check performed:** TACO's `annotations.json` records per-image `flickr_url`/source metadata; images are organized into 15 independently-contributed `batch_*` folders with no evidence of repeated frames of the same physical scene (checked: no duplicate file hashes across the dataset). Splitting by random image ID (not by batch) is therefore low-risk for this dataset, unlike datasets built from video frames.
-- Split will be saved as a fixed manifest of image IDs (`data/splits/`) before any training begins, and the test split will not be touched again until final evaluation.
+## Split (implemented in Phase 2)
 
-## Gate 1
+- **70/15/15 train/val/test** by random image ID, fixed seed (441): **1,050 / 225 / 225 images**, **3,385 / 712 / 680 boxes**. 7 of 4,784 raw boxes were dropped as invalid (zero-area or out-of-bounds) before splitting.
+- **Leakage check:** re-verified by hashing every image file during `prepare_dataset.py` — no duplicate files found among the 1,500 images. Random (not group-aware) splitting is low-risk for this dataset.
+- All 18 classes have at least one instance in both train and val (no zero-instance warning was raised).
+- Manifest of image IDs per split: `data/splits/manifest.json`. Test split is not touched again until final evaluation (Phase 5).
 
-**Pending your approval:** the Option B taxonomy (13 supercategory classes + 1 catch-all) and the 70/15/15 stratified-by-taxonomy split above. Once approved, Phase 2 (preprocessing: COCO→YOLO conversion, split manifest generation, resize/letterbox with correct box remapping) begins.
+## Conversion QA (Gate 2)
+
+- `scripts/test_coord_conversion.py`: round-trip tests (synthetic + 25 real annotations) on the COCO→YOLO bbox conversion, degenerate-box rejection, split-overlap, and taxonomy-threshold checks — **all pass**.
+- 3 "after" overlays (one per split, boxes decoded back from the written YOLO label files) visually checked against the image — boxes still land correctly on the litter object post-remap. Samples: `report/figures/after_remap_overlays/`.
+- Training/val images are symlinked (not copied) from the immutable raw files into `data/processed/{split}/images/` — `data/processed/` is ~6MB (labels + symlinks only), original 2.5GB dataset untouched.

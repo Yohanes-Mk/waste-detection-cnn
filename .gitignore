@@ -11,6 +11,13 @@ outputs/*
 !outputs/*.json
 .ipynb_checkpoints/
 
-# YOLO11n checkpoints are ~5MB, small enough to commit as real evidence
-# (PRD requires saved checkpoints as Gate 3 evidence) — not blanket-ignored.
 runs/
+
+# Generic pretrained base weights (auto-downloaded by Ultralytics on first run,
+# not project output) stay out; the actual fine-tuned checkpoints are the
+# evidence that matters and are committed explicitly below.
+/yolo11n.pt
+*.pt
+*.pth
+*.onnx
+!experiments/**/weights/*.pt

@@ -9,6 +9,11 @@
 | 2026-11-16 | Due date not yet confirmed in D2L; proceeding with Phase 0 research regardless | Student said to start now rather than wait. Nothing time-sensitive is blocked by this — Phase 0 (literature review, protocol) doesn't depend on the deadline. Needed before any submission-timeline planning (e.g. deciding E1 go/no-go). |
 | 2026-11-16 | Proposed refinement to RQ1 (narrow the augmentation claim to small/rare-class performance) — see `docs/literature_notes.md` | Generic "does augmentation help" is a near-tutorial-level ablation (TACO is a one-click Ultralytics dataset entry); narrowing it to TACO's documented small-object/class-imbalance weakness makes it specific without requiring a new experiment. **Proposed, not yet approved — Gate 0.** |
 
+| 2026-11-16 | Gate 0 approved: refined RQ1 (small/rare-class augmentation effect) | Student approved; moving to Phase 1. |
+| 2026-11-16 | Dataset source: official TACO v1.0 via Zenodo DOI `10.5281/zenodo.3587843` (TACO.zip, 2.7GB, CC-BY-4.0), not the GitHub `download.py` per-image-URL scraper | The Zenodo archive bundles images + COCO-format `annotations.json` directly and is explicitly cited as the "direct download" alternative in the TACO README; avoids depending on hundreds of individual third-party image URLs (some known to rot) for a one-time dataset pull. |
+
+| 2026-11-16 | Proposed class taxonomy (13 supercategories ≥50 instances + 1 `other litter` catch-all) and 70/15/15 split stratified by that taxonomy | Built from actual measured per-category/per-supercategory counts in `outputs/dataset_audit.json`, not assumed. Raw 60-class taxonomy has 10 categories with ≤5 instances — unlearnable at this dataset size. **Proposed, not yet approved — Gate 1.** |
+
 ## Open items needing the student's decision (not facts an agent can look up)
 - Confirm the Research Assignment's actual due date in D2L.
 - Approve, reject, or counter-propose the refined RQ1 in `docs/literature_notes.md` (Gate 0).

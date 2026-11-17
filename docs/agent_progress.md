@@ -2,8 +2,8 @@
 
 | Phase | Status | Evidence |
 |---|---|---|
-| 0 — Understand requirements & formulate RQ | **In progress** | This repo scaffold, `docs/literature_notes.md`, `docs/protocol_phase0.md`. Awaiting Gate 0 (student approval of RQ/scope). |
-| 1 — Dataset investigation & acquisition | Not started | — |
+| 0 — Understand requirements & formulate RQ | **Done — Gate 0 approved 2026-11-16** | Refined RQ1 (small/rare-class augmentation effect) approved by student. |
+| 1 — Dataset investigation & acquisition | **Data audited, Gate 1 proposal pending approval** | TACO v1.0 downloaded & verified (sha256 logged), 1,500 images / 4,784 annotations / 60 categories / 0 missing files confirmed by `scripts/audit_dataset.py` → `outputs/dataset_audit.json`. 20 annotation overlays visually checked (`report/figures/overlay_thumbnails/`). Taxonomy + split proposal in `data/README.md`, awaiting Gate 1. |
 | 2 — Data preprocessing | Not started | — |
 | 3 — Architecture selection & baseline | Not started | — |
 | 4 — Controlled augmentation experiment | Not started | — |

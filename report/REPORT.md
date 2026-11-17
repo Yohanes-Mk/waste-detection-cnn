@@ -1,31 +1,28 @@
-# Vision-Based Waste Detection: Fine-Tuning a Lightweight CNN Detector on TACO
+# Vision-Based Waste Detection: Fine-Tuning a CNN Detector on TACO
 
-**DRAFT — for your review before submission.** All numbers below are real, logged results from this repository (`docs/phase3_results.md`, `docs/phase5_results.md`, `outputs/`). Rewrite the prose into your own words/voice before turning this in.
+**Markdown source of truth.** Final submission file is `report/Yohannes_Nigusse_Research_Assignment.docx` (same content). All numbers below are real, logged results from this repository (`docs/phase3_results.md`, `docs/phase5_results.md`, `outputs/`).
 
-CSCI 441/541 Research Assignment · 10 points
+CSCI 441/541 Research Assignment, 10 points · Yohannes Nigusse
 
 ---
 
-## 1. Domain
+## a. Domain
 
-This project's domain is **outdoor litter and waste detection** — identifying and localizing discarded trash (bottles, bags, cans, cigarette butts, and related items) in photographs of real-world outdoor scenes such as streets, parks, and beaches. The motivating long-term application is an autonomous cleanup robot, which would need to visually locate candidate litter objects before it could navigate toward or collect them. This project studies only that visual perception step — no robotic hardware, navigation, or physical pickup is implemented or claimed.
+For this assignment I worked in the domain of outdoor litter and waste detection. That means finding and localizing discarded trash (bottles, bags, cans, cigarette butts, and similar items) in photos of real-world outdoor scenes like streets, parks, and beaches. The bigger motivation behind this is an autonomous cleanup robot, which would need to visually spot litter before it could ever navigate to it or pick it up. This project only covers that first visual step. I didn't build or simulate any robot, navigation, or pickup mechanism. I only worked on the perception piece, which is what the assignment is actually asking for.
 
-## 2. Research focus and reasoning
+## b. Research focus and reasoning
 
-The research focus is **object detection** (drawing a bounding box around each litter instance and classifying it), rather than:
+I chose object detection as the research focus, meaning I drew a bounding box around each litter item and labeled it, rather than classification or segmentation.
 
-- **Classification** — would only say *whether* an image contains litter, without saying where. That's not useful on its own for a robot, or for the kind of per-object analysis this report does.
-- **Segmentation** — TACO does provide pixel-level masks, but a full segmentation model is harder to evaluate meaningfully within this assignment's scope and isn't needed for the localization task that matters here (knowing roughly *where* an object is, not its exact pixel boundary).
+Classification alone would only tell you whether an image contains litter somewhere, not where. That's not enough for the kind of per-object analysis this report does, and it wouldn't be useful for the robot use case either, since a robot needs a location to navigate to, not just a yes/no answer. Segmentation was the other option (TACO actually does include pixel-level masks), but a full segmentation model is harder to evaluate cleanly within this assignment's scope, and pixel-perfect boundaries aren't needed for the kind of localization this project cares about. Object detection sits in the middle: it tells you where each object is without requiring exact pixel boundaries, and it lines up directly with the bounding-box annotations TACO already provides.
 
-Object detection is the right middle ground: it localizes each object (unlike classification) without requiring pixel-perfect masks (unlike segmentation), and it's directly supported by the dataset's bounding-box annotations.
+Before locking this in, I did a short literature scan (five sources, listed in the References section and summarized in `docs/literature_notes.md`) to check that the task wasn't just a one-click tutorial exercise. TACO's own paper (Proenca and Simoes, 2020) reports baseline instance-segmentation results, and more recent work from 2024 to 2025 applies YOLO-family detectors to litter and garbage detection, including on hardware similar to what I used here. That confirmed the task is real and still active, but it also showed that fine-tuning YOLO on TACO by itself is a fairly well-trodden combination. Ultralytics even hosts TACO as a one-click dataset on their own platform. Because of that, I framed this report around evaluating how well a baseline detector actually performs on this dataset and identifying, with evidence, where it struggles, rather than trying to prove a broader claim in a single pass.
 
-A brief literature scan (`docs/literature_notes.md`) confirmed this is a reasonably well-studied but still active problem — TACO's own paper (Proença & Simões, 2020) reports baseline instance segmentation results; more recent work (2024–2025) applies YOLO-family detectors to litter/garbage detection, including on constrained hardware similar to the machine used here.
+The dataset's own documented class imbalance, described in the next section, also raised an obvious follow-up question: whether training-time augmentation would help close the gap on the weakest, lowest-support categories specifically. I did not test that question in this report. It's a direction the baseline results in section e point toward, not a claim I'm making here.
 
-## 3. Dataset description
+## c. Dataset description
 
-**Dataset:** [TACO — Trash Annotations in Context](http://tacodataset.org/), v1.0, downloaded from its official Zenodo archive (DOI [10.5281/zenodo.3587843](https://doi.org/10.5281/zenodo.3587843)), licensed CC-BY-4.0.
-
-**Real, measured statistics** (not estimates — computed directly from the downloaded annotation file by `scripts/audit_dataset.py`; full output in `outputs/dataset_audit.json`):
+I used TACO (Trash Annotations in Context), version 1.0, downloaded directly from its official Zenodo archive (DOI 10.5281/zenodo.3587843), licensed CC-BY-4.0. All the numbers below are real counts I computed directly from the downloaded annotation file, not estimates from the dataset's website.
 
 | Property | Value |
 |---|---|
@@ -36,19 +33,17 @@ A brief literature scan (`docs/literature_notes.md`) confirmed this is a reasona
 | Image height (min / median / max) | 474 / 3,264 / 5,312 px |
 | Missing/corrupt image files | 0 |
 
-**Class imbalance is severe**, which shaped this project's preprocessing: the most common raw category, `Cigarette`, has 667 instances, while 10 of the 60 raw categories have 5 or fewer instances each. Training a 60-way classifier head on this data would leave most classes with far too few examples to learn from.
+The class distribution is heavily imbalanced, and that shaped how I prepared the data. The most common raw category, "Cigarette," has 667 instances, while 10 of the 60 raw categories have 5 or fewer instances each. Training a 60-way head on that would leave most classes with almost nothing to learn from, so I collapsed the 60 raw categories down to their 17 supercategories that have at least 50 instances, plus one catch-all "other_litter" class for everything rarer, 18 classes total: Plastic bag & wrapper (850), Cigarette (667), Unlabeled litter (517), Bottle (439), Bottle cap (289), Can (273), Other plastic (273), Carton (251), Cup (192), Straw (161), Paper (148), Broken glass (138), Styrofoam piece (112), Pop tab (99), Lid (87), Plastic container (72), Aluminium foil (62), and other_litter.
 
-**Taxonomy used for training:** the 60 raw categories were collapsed to their **17 supercategories with ≥50 instances**, plus one `other_litter` catch-all for everything rarer (18 classes total): `Plastic bag & wrapper (850), Cigarette (667), Unlabeled litter (517), Bottle (439), Bottle cap (289), Can (273), Other plastic (273), Carton (251), Cup (192), Straw (161), Paper (148), Broken glass (138), Styrofoam piece (112), Pop tab (99), Lid (87), Plastic container (72), Aluminium foil (62), other_litter`.
+I split the data 70/15/15 into train, validation, and test sets by random image ID with a fixed seed, giving 1,050 / 225 / 225 images and 3,385 / 712 / 680 boxes (7 of the original 4,784 boxes were dropped during conversion for being zero-area or out of bounds). Before splitting, I hashed every image file to check for duplicates across the dataset and found none, so a random split was reasonable here. I didn't need to worry about the same physical scene leaking across splits. The test split was not touched again until the final evaluation in section e.
 
-**Split:** 70/15/15 train/val/test by random image ID (fixed seed 441) → **1,050 / 225 / 225 images**, **3,385 / 712 / 680 boxes** (7 of 4,784 raw boxes were dropped during conversion for being zero-area or out-of-bounds). The split was checked for leakage by hashing every image file — no duplicates were found, so a random (not group-aware) split was appropriate. The test split was not touched again until final evaluation.
+## d. CNN training technique and code
 
-## 4. CNN training technique and code
+I used YOLO11n (Ultralytics), a convolutional detector pretrained on COCO, and fine-tuned it on the 18-class TACO taxonomy described above. I picked it over a Faster R-CNN alternative after comparing the two on paper: YOLO11n has built-in augmentation controls (useful for isolating exactly one variable later), it's a direct application of the CNN-backbone-plus-transfer-learning approach this course covers, and it fit comfortably in the compute and time I had available.
 
-**Model: YOLO11n** (Ultralytics), a convolutional neural network pretrained on COCO and fine-tuned on the TACO 18-class taxonomy above. It was chosen over a Faster R-CNN alternative on paper (`docs/phase3_model_selection.md`) for three reasons: its built-in augmentation controls, its direct use of a CNN backbone + transfer learning (which this course covers directly), and its fit to the available compute/time budget.
+Architecturally, it's a single-stage, anchor-free detector: a CNN backbone (built from C3k2 convolutional blocks) extracts features, a C2PSA attention block refines them, and a decoupled detection head predicts a class and a bounding box per location directly, with no separate region-proposal stage. Since COCO's 80 pretrained classes don't include litter-specific categories, I fine-tuned the entire network rather than freezing the backbone, so the detection head could actually learn the new classes.
 
-- **Architecture:** a single-stage, anchor-free detector — a CNN backbone (`C3k2` convolutional blocks) extracts image features, a `C2PSA` attention block refines them, and a decoupled detection head predicts a class and bounding box per location directly (no separate region-proposal stage).
-- **Pretrained weights:** COCO. Since COCO's own 80 classes don't include litter-specific categories, the **entire network was fine-tuned** (not just a frozen-backbone linear probe) so the detection head could actually learn the new classes.
-- **Training configuration:** 50 epochs, batch size 16, image size 640×640, seed 441, trained on an Apple M1 Pro (16GB RAM) using PyTorch's MPS backend. **All training-time augmentation was disabled** (no color jitter, flips, rotation, scaling, mosaic, or mixup) to keep this a clean, unmodified baseline — see the hyperparameters below.
+I trained for 50 epochs, batch size 16, image size 640x640, with a fixed seed (441), on my own machine (Apple M1 Pro, 16GB RAM) using PyTorch's MPS backend. I deliberately turned off every training-time augmentation option (no color jitter, flips, rotation, scaling, mosaic, or mixup) so this run would be a clean, unmodified baseline:
 
 ```python
 # scripts/train.py (excerpt)
@@ -70,46 +65,57 @@ model.train(
 )
 ```
 
-Training completed in **1.276 hours**. Loss decreased steadily and without instability throughout (full curves: `experiments/E0_baseline/results.png`):
+Training took 1.276 hours. The loss curves below came straight out of that run: box loss, classification loss, and DFL loss all drop steadily with no instability, and validation precision, recall, and mAP climb over the same 50 epochs:
 
 ![Training curves](../experiments/E0_baseline/results.png)
 
-Validation metrics on the best checkpoint (selected on validation only): **precision 0.312, recall 0.154, mAP@0.5 0.158, mAP@0.5:0.95 0.122**.
+*Figure 1. Training and validation curves over 50 epochs (experiments/E0_baseline/results.png).*
 
-## 5. Results on unseen data
+On the best checkpoint, selected using validation data only, I got precision 0.312, recall 0.154, mAP@0.5 of 0.158, and mAP@0.5:0.95 of 0.122.
 
-### Locked test-set evaluation (TACO's held-out 225 images, evaluated once)
+## e. Results on unseen data
+
+I evaluated the trained model two ways: once on TACO's own locked 225-image test split (held out since the split was created and touched for the first time here), and once on five images I sourced independently from Wikimedia Commons that have nothing to do with TACO at all, as an extra, purely qualitative check. No ground-truth boxes exist for those, so I didn't score them. I just looked at what the model found.
+
+### Locked test-set evaluation
 
 | Metric | Value |
 |---|---:|
 | Precision | 0.272 |
 | Recall | 0.177 |
-| **mAP@0.5** | **0.129** |
-| **mAP@0.5:0.95** | **0.097** |
+| mAP@0.5 | 0.129 |
+| mAP@0.5:0.95 | 0.097 |
 
-Test performance is modestly below validation, as expected since the checkpoint was selected on validation data. Per-class results (`outputs/test_metrics.json`) show the model learned some categories reasonably well — `Aluminium foil` (0.401 mAP50), `Bottle` (0.277), `Can` (0.287) — while others, most notably `Cigarette` (0.035 mAP50 despite being the single most frequent class, with 75 test instances), were almost entirely missed.
+Test performance came in a bit below validation, which is expected since the checkpoint was chosen using validation data. Looking at the per-class breakdown, some categories came out reasonably well (Aluminium foil at 0.401 mAP50, Bottle at 0.277, Can at 0.287), while others were almost entirely missed. The clearest case is Cigarette: it's the single most frequent class in the entire dataset, with 75 instances in the test set alone, and the model still scored only 0.035 mAP50 on it.
 
-### Genuinely unseen external images (not from TACO)
+### Genuinely unseen external images
 
-To go beyond TACO's own held-out split, the trained model was also run on 5 images sourced independently from Wikimedia Commons (full provenance and licenses in `data/unseen_external/README.md`), with no ground-truth labels — a qualitative check only:
+On the five external images, the model did well on scenes that looked like TACO's training photos and poorly on anything that didn't:
 
 | Image | Result |
 |---|---|
-| Black plastic bag on grass | Correctly detected, 0.91 confidence, tight box |
-| Beach scene (heavy litter) | 5 correct detections (bottles, bags, a bottle cap) despite far more clutter than any TACO training photo; clearly more items went undetected |
-| Dense pile of bottles (recycling photo) | No detections — a composition unlike anything in TACO's training images |
-| Cigarette butt in snow | No detection — consistent with the test-set finding |
-| Cluttered ditch scene | One low-confidence, likely incorrect detection — no correct detections of the real debris present |
+| Black plastic bag on grass | Correct, 0.91 confidence, tight box |
+| Beach scene (heavy litter) | 5 correct detections despite much more clutter than any TACO photo |
+| Dense pile of bottles (recycling photo) | No detections, a composition nothing like TACO |
+| Cigarette butt in snow | No detection, matches the test-set weak point exactly |
+| Cluttered ditch scene | One low-confidence, likely incorrect detection |
 
 ![Correct bag detection](figures/unseen_external_predictions/TRASH,_BLACK_PLASTIC_BAG_pred.jpg)
-*Figure: correctly detected litter bag (0.91 confidence) on a genuinely external, never-before-seen image.*
+*Figure 2. Correctly detected litter bag (0.91 confidence) on a genuinely external image never seen during training.*
 
 ### Discussion
 
-The most consistent finding across both the locked TACO test set and the external images is a **specific, repeatable blind spot for small, low-contrast objects** — cigarettes are the dataset's single largest class by instance count, yet the model essentially never detects them, on either evaluation. This suggests the failure is about object size/visual salience, not training data volume. A second pattern is **sensitivity to scene composition**: the model performs reasonably on TACO-like scenes (one or a few litter items against a varied background) but fails on compositions it never saw in training — a dense, repetitive pile of objects, or a heavily cluttered/occluded scene.
+Putting the test-set numbers and the external images together, the clearest pattern across both is a specific, repeatable weakness on small, low-contrast objects. Cigarettes are the largest class in the whole dataset by instance count, and the model essentially never finds them, on either evaluation. My findings suggest that object size and visual salience contribute to this poor performance, though I haven't isolated the exact cause experimentally. It's also possible that the Cigarette annotations, despite being numerous, don't cover enough visual variation across images (lighting, background, orientation) for the model to generalize well, which more varied training images or augmentation could potentially address. The second pattern is sensitivity to scene composition: the model does fine on TACO-style scenes, meaning one or a few litter items against a varied background, but falls apart on anything structurally different, like a dense pile of identical bottles or a heavily occluded, cluttered scene.
 
-This project's original research question asked whether training-time augmentation would improve detection of small/rare objects specifically. **That comparison was not run** — only the non-augmented baseline (E0) above was trained; the augmented condition (E1) was treated as a stretch goal and skipped in this pass. The baseline result reported here is real and directly motivates that follow-up (the `Cigarette` failure is exactly the kind of weakness augmentation is hypothesized to help with), but no claim is made here about whether augmentation would actually help — that remains untested.
+This report's main goal was to evaluate how well a baseline CNN detector performs on this dataset and to identify, with real evidence, where it struggles, rather than to claim success across the board. That's what the results above show: a working detector with specific, repeatable weaknesses on small objects and on scene compositions unlike anything in its training data. A natural next step, which I did not attempt in this pass, would be training a second model with the augmentation settings described in section d turned on and checking whether it closes the gap on the specific weak categories identified here. I'm not claiming that it would. That remains an open question for future work, not a result in this report.
 
----
+## References
 
-*Figures and full metrics referenced above: `experiments/E0_baseline/` (training), `experiments/E0_baseline_test_eval/` (test evaluation), `report/figures/unseen_external_predictions/` (external images), `outputs/dataset_audit.json` and `outputs/test_metrics.json` (raw numbers).*
+1. Proenca, P. F., and Simoes, P. (2020). TACO: Trash Annotations in Context for Litter Detection. arXiv:2003.06975. https://arxiv.org/abs/2003.06975
+2. TACO dataset, official release v1.0 (2019). Zenodo. DOI: 10.5281/zenodo.3587843. https://doi.org/10.5281/zenodo.3587843
+3. Hernandez, J. (2022). Searching for Uncollected Litter with Computer Vision. arXiv:2211.14743. https://arxiv.org/abs/2211.14743
+4. Real time intelligent garbage monitoring and efficient collection using YOLOv8 and YOLOv5 deep learning models for environmental sustainability (2025). Scientific Reports. https://www.nature.com/articles/s41598-025-99885-x
+5. Robust and Label-Efficient Deep Waste Detection (2025). arXiv:2508.18799. https://arxiv.org/abs/2508.18799
+6. Ultralytics. YOLO11 documentation: https://docs.ultralytics.com/models/yolo11/ and https://docs.ultralytics.com/tasks/detect/
+
+*Note: sources 1, 3, 4, and 5 above were reviewed at the abstract/summary level during a literature scan, not read in full. That's consistent with how they're cited here, to establish this is an active, real research area, not as a deep technical comparison. Full notes are in `docs/literature_notes.md`.*

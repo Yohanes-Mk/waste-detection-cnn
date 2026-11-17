@@ -33,6 +33,8 @@
 | 2026-11-16 | Report delivered as `.docx` (built with docx-js, not LaTeX) rather than converted through a LaTeX pipeline | No `pandoc`/LibreOffice installed on this machine to render a LaTeX→docx pipeline cleanly; docx-js produces the .docx directly and was verified by extracting its embedded images and text, not just assumed correct. |
 | 2026-11-16 | Code-only zip contains just the 7 scripts (no `configs/dataset.yaml`, no data, no checkpoints) | Matches the literal request ("cleanup codes only"); the scripts reference relative paths that assume being run from inside the full repo, not from this zip alone — noted here so it isn't mistaken for a standalone runnable package. |
 
+| 2026-11-16 | Revised report per student's review feedback: (1) expanded code zip to include `configs/dataset.yaml`, `experiments/E0_baseline/results.png`+`weights/best.pt`, `outputs/test_metrics.json`, `docs/literature_notes.md`, and a README, (2) reframed sections b and e around evaluating the baseline detector and its limitations rather than around the untested augmentation question, (3) added a References section, (4) softened the Cigarette conclusion to "suggests" rather than asserting cause, (5) removed every em dash from the report | Direct, specific student feedback after reading the draft. `report/REPORT.md` kept in sync with the `.docx`. |
+
 ## Open items needing the student's decision (not facts an agent can look up)
 - Confirm the Research Assignment's actual due date in D2L.
 - Approve, reject, or counter-propose the refined RQ1 in `docs/literature_notes.md` (Gate 0).

@@ -5,7 +5,7 @@ __pycache__/
 data/raw/
 data/processed/
 outputs/
-*.pt
-*.pth
-*.onnx
 .ipynb_checkpoints/
+
+# YOLO11n checkpoints are ~5MB, small enough to commit as real evidence
+# (PRD requires saved checkpoints as Gate 3 evidence) — not blanket-ignored.

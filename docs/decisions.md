@@ -17,6 +17,12 @@
 
 | 2026-11-16 | Phase 2 implemented: COCO→YOLO conversion, 70/15/15 split (1,050/225/225 images), `configs/dataset.yaml` for Ultralytics, correctness tests passing | No resizing/letterboxing done in this step — Ultralytics' own dataloader letterboxes at train time and YOLO coords are resolution-independent, so pre-resizing here would risk double preprocessing (PRD Sec 5.2). Images are symlinked, not copied, to keep raw data immutable and avoid duplicating 2.5GB. |
 
+| 2026-11-16 | Model selection: YOLO11n over Faster R-CNN alternative (on-paper comparison in `docs/phase3_model_selection.md`) | Built-in augmentation toggles make a clean E0/E1 comparison without extra implementation risk; fits course's taught CNN/transfer-learning content; fits local M1 Pro compute/time budget; literature-supported for this exact task. |
+| 2026-11-16 | 1-epoch smoke test on full train split (not a mini-subset) before committing to a full run | Simpler to implement than building a separate subset config, and it doubles as a real per-epoch timing benchmark (~1.8 min/epoch on M1 Pro MPS, batch 16). Loss decreased monotonically (box 1.85→1.36, cls 13.1→6.0) — training dynamics are sane. Pipeline, dataset.yaml, and eval all confirmed working end-to-end; real (if still weak) val metrics produced (mAP50=0.043 after 1 epoch). |
+| 2026-11-16 | E0 baseline: 50 epochs, batch 16, imgsz 640, single seed (441), single run | PRD explicitly allows "if only one run is feasible, explicitly acknowledge that limitation" — ~1.5hr per 50-epoch run on this hardware makes multiple seeds impractical within this assignment's scope; disclosing this as a limitation in the report rather than implying more rigor than was actually run. |
+
+| 2026-11-16 | E0 baseline training complete: 50 epochs, 1.276hr, mAP50=0.158, mAP50-95=0.122 on val | Real, logged run (`experiments/E0_baseline/`). `Cigarette` (largest class, 667 instances) scored ~0 AP — genuinely informative given RQ1's focus on small/rare-object performance, not a bug to fix. Checkpoints (~5MB each) committed directly — small enough that `.gitignore`'s earlier blanket `*.pt` exclusion was removed. |
+
 ## Open items needing the student's decision (not facts an agent can look up)
 - Confirm the Research Assignment's actual due date in D2L.
 - Approve, reject, or counter-propose the refined RQ1 in `docs/literature_notes.md` (Gate 0).
